@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{7ae03416-8488-4efe-9405-3e253d0a816c}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile />
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <ItemGroup>
+    <Compile Include="about.py" />
+    <Compile Include="AI.py" />
+    <Compile Include="choose.py" />
+    <Compile Include="colors.py" />
+    <Compile Include="db3.py" />
+    <Compile Include="hugs.py" />
+    <Compile Include="info.py" />
+    <Compile Include="mlfw.py" />
+    <Compile Include="module.py" />
+    <Compile Include="module1.py" />
+    <Compile Include="nicks.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="permissions.py" />
+    <Compile Include="rand.py" />
+    <Compile Include="reload2.py" />
+    <Compile Include="seen.py" />
+    <Compile Include="tags.py" />
+    <Compile Include="tell2.py" />
+    <Compile Include="test.py" />
+    <Compile Include="timers.py" />
+    <Compile Include="uptime.py" />
+    <Compile Include="URL.py" />
+    <Compile Include="vore.py" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>
