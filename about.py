@@ -62,10 +62,10 @@ def source(willie, trigger):
     if not perm_chk(trigger.hostmask, "Bc", willie):
         return
     time.sleep(random.uniform(0, 3))
-    willie.say('[](/ppnervous "My what?")')
+    willie.say('My what?')
     time.sleep(random.uniform(3, 5))
     willie.say(u"Well I guess it's okay, since it's you. You can see my " +
-               u"source at http://willie.dftba.net/ and my modules at https://www.dropbox.com/sh/7jsl9693z1l46mr/AAANZFIUYg0Rr9B54rkau3Oha?dl=0")
+               u"source at http://willie.dftba.net/ and my modules at https://github.com/tecknojock/BurpyBot")
 
 
 if __name__ == "__main__":
