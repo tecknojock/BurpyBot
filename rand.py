@@ -29,6 +29,7 @@ def setup(willie):
     cur = Db.cursor()
     
     cur.execute('create table if not exists lck_table (nick , lck, Primary Key (nick))')
+    cur.execute('create table if not exists system_table (nick , direction, Primary Key (nick))')
     listoftags = cur.fetchall()
     Db.close()
 
@@ -46,7 +47,6 @@ def rollany1(willie, trigger):
     try:
         if advantagetype[0] == "h":
             advantage = int(rolled[2])
-            willie.say("higher" + str(advantage))
         elif advantagetype[0] == "l":
             advantage = -int(rolled[2])
     except:
