@@ -7,6 +7,8 @@ import urllib2
 from willie.module import commands, example, priority, rule, rate, event
 from subprocess import call
 import string
+import heapq
+
 try:
     import imp
     import sys

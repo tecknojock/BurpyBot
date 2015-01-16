@@ -5,6 +5,7 @@ from willie.tools import Nick
 import urllib
 import urllib2
 import math
+import heapq
 
 from willie.module import commands, example, priority, rule, rate, event
 
@@ -36,20 +37,37 @@ def rollany1(willie, trigger):
     if not perm_chk(trigger.hostmask, "Bc", willie):
         return
     message = trigger.partition(" ")
-    roll = re.match("[0-9]+d[0-9]+", message[0]).group(0)
-    rnumb = roll.partition("d")[0]
-    die = roll.partition("d")[2]
+    roll = re.match("[0-9]+d[0-9]+([hl][0-9]+)?", message[0]).group(0)
+    advantagetype = re.findall(r"[hl]",roll)
+    rolled = re.split(r"[dhl]", roll)
+    rnumb = rolled[0]
+    die = rolled[1]
+    advantage = 0
+    try:
+        if advantagetype[0] == "h":
+            advantage = int(rolled[2])
+            willie.say("higher" + str(advantage))
+        elif advantagetype[0] == "l":
+            advantage = -int(rolled[2])
+    except:
+        pass
+
     charmax = 450 - len(roll)-8-len(message[2])
     if (len(die)+2)*int(rnumb) > charmax:
         rnumb = str(int(charmax/(len(die)+2))+1)
         roll = unicode.format("%sd%s" % (rnumb, die))
     try:
-        numbers = re.sub("\s",", ",urllib2.urlopen(urllib2.Request(unicode.format(u"http://www.random.org/integers/?num={0}&min=1&max={1}&col=1&base=10&format=plain&rnd=new", rnumb, die))).read().strip())
+        numbers = re.findall("[0-9]+",urllib2.urlopen(urllib2.Request(unicode.format(u"http://www.random.org/integers/?num={0}&min=1&max={1}&col=1&base=10&format=plain&rnd=new", rnumb, die))).read().strip())
     except:
         numbers = list()
         for count in range(0, int(rnumb)):
             numbers.append(random.randint(1,int(die)))
-    if int(rnumb) == 1:
+    if advantage != 0:
+        if advantage >0:
+            numbers = heapq.nlargest(advantage, numbers)
+        else:
+            numbers = heapq.nsmallest(abs(advantage), numbers)
+    if int(rnumb) == 1 or abs(advantage) == 1:
         try: 
             int(numbers)
         except:
@@ -85,7 +103,7 @@ def rollany1(willie, trigger):
             else:
                 willie.say(unicode.format(u"({2}) [{0}] : {1}", numbers, message[2].encode(), roll.encode()))
     else:
-       willie.say(unicode.format(u"({2}) [{0}] : {1}", numbers, message[2].encode(), roll.encode()))
+        willie.say(unicode.format(u"({2}) {0} : {1}", numbers, message[2].encode(), roll.encode()))
 
 @commands("luck")
 def luck(willie, trigger):
