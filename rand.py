@@ -38,7 +38,7 @@ def rollany1(willie, trigger):
     if not perm_chk(trigger.hostmask, "Bc", willie):
         return
     message = trigger.partition(" ")
-    roll = re.match("[0-9]+d[0-9]+([hl][0-9]+)?", message[0]).group(0)
+    roll = re.match("[0-9]+d[0-9]+([hl][0-9]+)?([+*-][0-9])*", message[0]).group(0)
     advantagetype = re.findall(r"[hl]",roll)
     rolled = re.split(r"[dhl]", roll)
     rnumb = rolled[0]
@@ -103,7 +103,7 @@ def rollany1(willie, trigger):
             else:
                 willie.say(unicode.format(u"({2}) [{0}] : {1}", numbers, message[2].encode(), roll.encode()))
     else:
-        willie.say(unicode.format(u"({2}) {0} : {1}", numbers, message[2].encode(), roll.encode()))
+        willie.say(unicode.format(u"({2}) {0} : {1}", ", ".join(str(x) for x in numbers), message[2].encode(), roll.encode()))
 
 @commands("luck")
 def luck(willie, trigger):
