@@ -23,7 +23,6 @@ def hacky_import(mod):
     
     return __import__(mod)
 
-# This is horrible, but it was the best way I could think of.
 def format_diff(seconds):
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
@@ -56,6 +55,7 @@ def format_diff(seconds):
 Hostmask = hacky_import("ad_line").Hostmask
 
 running_thread = None
+thread_start_time = 0
 
 class QuoteSearchThread(threading.Thread):
     def __init__(self, name, reply_func, bot):
@@ -118,14 +118,19 @@ class QuoteSearchThread(threading.Thread):
 @commands("icquote")
 def do_icquote(bot, trigger):
     global running_thread
-    arg = trigger.group(2).strip()
+    global thread_start_time
+    arg = trigger.group(2)
     if not arg:
         bot.say("You must provide a user to find a quote for!")
         return
 
     if running_thread:
-        bot.say("A quote search is already running!")
-        return
+        if (time.time() - thread_start_time) > 60:
+            running_thread = None
+        else:
+            bot.say("A quote search is already running!")
+            return
 
     running_thread = QuoteSearchThread(arg, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot)
     running_thread.start()
+    thread_start_time = time.time()
