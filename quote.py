@@ -4,6 +4,7 @@ import imp
 import sys
 import time
 import random
+import datetime
 import psycopg2
 import threading
 import traceback
@@ -21,6 +22,36 @@ def hacky_import(mod):
             ffp.close()
     
     return __import__(mod)
+
+# This is horrible, but it was the best way I could think of.
+def format_diff(seconds):
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+    weeks, days = divmod(days, 7)
+    months, weeks = divmod(weeks, 4)
+    years, months = divmod(months, 12)
+    
+
+    if years > 0:
+        return "%d years" % years
+
+    if months > 0:
+        return "%d months" % months
+
+    if weeks > 0:
+        return "%d weeks" % weeks
+
+    if days > 0:
+        return "%d days" % days
+
+    if hours > 0:
+        return "%d hours" % hours
+
+    if minutes > 0:
+        return "%d minutes" % minutes
+
+    return "%d seconds" % seconds
 
 Hostmask = hacky_import("ad_line").Hostmask
 
@@ -42,7 +73,7 @@ class QuoteSearchThread(threading.Thread):
         where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5"]])
         name_fixed = "%s!%%" % self.name
 
-        q = ("SELECT backlog.type, backlog.flags, sender.sender, backlog.message FROM "
+        q = ("SELECT backlog.type, backlog.flags, sender.sender, EXTRACT(EPOCH FROM backlog.time), backlog.message FROM "
                 "public.backlog, public.sender, public.buffer, public.network, public.quasseluser WHERE "
                 "username='TecknoJock' AND backlog.senderid = sender.senderid AND networkname='Canternet After Dark' AND "
                 "backlog.bufferid = buffer.bufferid AND (%s) AND buffer.networkid = network.networkid AND buffer.userid = quasseluser.userid AND "
@@ -57,7 +88,7 @@ class QuoteSearchThread(threading.Thread):
             if not real_nick:
                 real_nick = Hostmask.parse(row[2]).nick
 
-            actions.append(row[-1])
+            actions.append((row[-1], row[3]))
 
         if not actions:
             self.reply_func("It seems that %s has never performed any actions!" % self.name)
@@ -67,11 +98,12 @@ class QuoteSearchThread(threading.Thread):
 
         while not choice:
             a = random.choice(actions)
-            m = re.search('"([^"]+)"', a)
+            m = re.search('"([^"]+)"', a[0])
             if m:
-                choice = m.group(1)
+                choice = (m.group(1), a[1])
 
-        self.reply_func("\"%s\" --%s" % (choice, real_nick))
+        diff = (datetime.datetime.now() - datetime.datetime.fromtimestamp(choice[1])).total_seconds()
+        self.reply_func("\"%s\" --%s, %s ago." % (choice[0], real_nick, format_diff(diff)))
 
     def run(self):
         global running_thread
