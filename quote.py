@@ -40,7 +40,7 @@ class QuoteSearchThread(threading.Thread):
         cur = con.cursor()
 
         where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5"]])
-        name_fixed = "%s%%" % self.name
+        name_fixed = "%s!%%" % self.name
 
         q = ("SELECT backlog.type, backlog.flags, sender.sender, backlog.message FROM "
                 "public.backlog, public.sender, public.buffer, public.network, public.quasseluser WHERE "
