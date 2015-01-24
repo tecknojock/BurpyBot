@@ -35,7 +35,6 @@ class QuoteSearchThread(threading.Thread):
         
     def _run(self):
         actions = []
-        start = time.time()
         
         con = psycopg2.connect("dbname='quassel' user='%s' password='%s' host='localhost'" % (self.bot.config.quotes.sql_user, self.bot.config.quotes.sql_pass))
         cur = con.cursor()
@@ -72,9 +71,7 @@ class QuoteSearchThread(threading.Thread):
             if m:
                 choice = m.group(1)
 
-        now = time.time()
-
-        self.bot.say("\"%s\" --%s (Took %0.2f seconds.)" % (choice, real_nick, (now - start)))
+        self.reply_func("\"%s\" --%s" % (choice, real_nick))
 
     def run(self):
         global running_thread
