@@ -74,7 +74,7 @@ class QuoteSearchThread(threading.Thread):
 
         now = time.time()
 
-        self.bot.say("\"%s\" --%s (Took %0.2f seconds.)" % (choice, real_nick, (now - start)))
+        self.reply_func("\"%s\" --%s (Took %0.2f seconds.)" % (choice, real_nick, (now - start)))
 
     def run(self):
         global running_thread
