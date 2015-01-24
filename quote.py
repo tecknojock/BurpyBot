@@ -118,7 +118,7 @@ class QuoteSearchThread(threading.Thread):
 @commands("icquote")
 def do_icquote(bot, trigger):
     global running_thread
-    arg = trigger.group(2)
+    arg = trigger.group(2).strip()
     if not arg:
         bot.say("You must provide a user to find a quote for!")
         return
