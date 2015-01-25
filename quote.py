@@ -23,6 +23,7 @@ def hacky_import(mod):
     
     return __import__(mod)
 
+# This is seriously horrible but it's the best way I could think of.
 def format_diff(seconds):
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
@@ -31,26 +32,35 @@ def format_diff(seconds):
     months, weeks = divmod(weeks, 4)
     years, months = divmod(months, 12)
     
+    units = ""
+    amount = 0
 
     if years > 0:
-        return "%d years" % years
+        units = "%d years"
+        amount = years
+    elif months > 0:
+        units = "%d months"
+        amount = months
+    elif weeks > 0:
+        units = "%d weeks"
+        amount = weeks
+    elif days > 0:
+        units = "%d days"
+        amount = days
+    elif hours > 0:
+        units = "%d hours"
+        amount = hours
+    elif minutes > 0:
+        units = "%d minutes"
+        amount = minutes
+    else:
+        units = "%d seconds"
+        amount = seconds
 
-    if months > 0:
-        return "%d months" % months
+    if amount == 1:
+        units = units[:-1]
 
-    if weeks > 0:
-        return "%d weeks" % weeks
-
-    if days > 0:
-        return "%d days" % days
-
-    if hours > 0:
-        return "%d hours" % hours
-
-    if minutes > 0:
-        return "%d minutes" % minutes
-
-    return "%d seconds" % seconds
+    return units % amount
 
 Hostmask = hacky_import("ad_line").Hostmask
 
