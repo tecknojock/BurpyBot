@@ -77,16 +77,17 @@ class QuoteSearchThread(threading.Thread):
                 "public.backlog, public.sender, public.buffer, public.network, public.quasseluser WHERE "
                 "username='TecknoJock' AND backlog.senderid = sender.senderid AND networkname='Canternet After Dark' AND "
                 "backlog.bufferid = buffer.bufferid AND (%s) AND buffer.networkid = network.networkid AND buffer.userid = quasseluser.userid AND "
-                "type=4 AND sender ILIKE %%s ORDER BY backlog.messageid ASC"
+                "type=4 AND (sender ILIKE %%s OR sender ILIKE %%s) ORDER BY backlog.messageid ASC"
             ) % where_buffer
 
-        cur.execute(q, (name_fixed,))
+        cur.execute(q, (name_fixed, self.name))
 
         real_nick = None
 
         for row in cur.fetchall():
             if not real_nick:
-                real_nick = Hostmask.parse(row[2]).nick
+                hm_nick = Hostmask.parse(row[2]).nick
+                real_nick = hm_nick if hm_nick else row[2]
 
             actions.append((row[-1], row[3]))
 
