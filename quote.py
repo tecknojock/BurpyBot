@@ -120,10 +120,12 @@ class QuoteSearchThread(threading.Thread):
 def do_icquote(bot, trigger):
     global running_thread
     global thread_start_time
-    arg = trigger.group(2).strip()
-    if not arg:
+    arg = trigger.group(2)
+    if not arg or not len(arg.strip()):
         bot.say("You must provide a user to find a quote for!")
         return
+
+    arg = arg.strip()
 
     if running_thread:
         if (time.time() - thread_start_time) > 60:
