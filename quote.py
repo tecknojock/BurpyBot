@@ -9,7 +9,7 @@ import psycopg2
 import threading
 import traceback
 
-from willie.module import commands
+from willie.module import commands, rate
 
 def hacky_import(mod):
     ffp = None
@@ -64,8 +64,9 @@ def format_diff(seconds):
 
 Hostmask = hacky_import("ad_line").Hostmask
 
-running_thread = None
-thread_start_time = 0
+running_threads = []
+lock = threading.Lock()
+max_threads = 5
 
 class QuoteSearchThread(threading.Thread):
     def __init__(self, name, reply_func, bot):
@@ -73,11 +74,12 @@ class QuoteSearchThread(threading.Thread):
         self.name = name
         self.reply_func = reply_func
         self.bot = bot
+        self.start_time = time.time()
         
     def _run(self):
         actions = []
         
-        con = psycopg2.connect("dbname='quassel' user='%s' password='%s' host='localhost'" % (self.bot.config.quotes.sql_user, self.bot.config.quotes.sql_pass))
+        con = psycopg2.connect("dbname='quassel' user='%s' password='%s' host='localhost' port=5433" % (self.bot.config.quotes.sql_user, self.bot.config.quotes.sql_pass))
         cur = con.cursor()
 
         where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5"]])
@@ -117,19 +119,18 @@ class QuoteSearchThread(threading.Thread):
         self.reply_func("\"%s\" --%s, %s ago." % (choice[0], real_nick, format_diff(diff)))
 
     def run(self):
-        global running_thread
         try:
             self._run()
         except Exception as e:
             self.reply_func("An error has occured: %s" % str(e))
             traceback.print_exc()
 
-        running_thread = None
+        with lock:
+            running_threads.remove(self)
 
 @commands("icquote")
+@rate(1)
 def do_icquote(bot, trigger):
-    global running_thread
-    global thread_start_time
     arg = trigger.group(2)
     if not arg or not len(arg.strip()):
         bot.say("You must provide a user to find a quote for!")
@@ -137,13 +138,17 @@ def do_icquote(bot, trigger):
 
     arg = arg.strip()
 
-    if running_thread:
-        if (time.time() - thread_start_time) > 60:
-            running_thread = None
-        else:
-            bot.say("A quote search is already running!")
-            return
+    if len(running_threads) >= max_threads:
+        for t in running_threads: # Get rid of timed-out threads.
+            if (time.time() - t.start_time) > 60:
+                running_threads.remove(t)
+    
+    if len(running_threads) >= max_threads: # Still?
+        bot.say("%d quote searches are already running!" % max_threads)
+        return
 
-    running_thread = QuoteSearchThread(arg, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot)
-    running_thread.start()
-    thread_start_time = time.time()
+    t = QuoteSearchThread(arg, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot)
+    t.start()
+
+    with lock:
+        running_threads.append(t)
