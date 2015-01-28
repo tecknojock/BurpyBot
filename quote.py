@@ -86,12 +86,13 @@ lock = threading.Lock()
 max_threads = 5
 
 class QuoteSearchThread(threading.Thread):
-    def __init__(self, name, reply_func, bot):
+    def __init__(self, name, reply_func, bot, sender):
         threading.Thread.__init__(self)
         self.name = name
         self.reply_func = reply_func
         self.bot = bot
         self.start_time = time.time()
+        self.sender = sender
         
     def _run(self):
         actions = []
@@ -99,7 +100,13 @@ class QuoteSearchThread(threading.Thread):
         con = psycopg2.connect("dbname='quassel' user='%s' password='%s' host='localhost' port=5433" % (self.bot.config.quotes.sql_user, self.bot.config.quotes.sql_pass))
         cur = con.cursor()
 
-        where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5"]])
+        if self.sender.lower()[0:5] == "#vore":
+            where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5"]])
+        elif (self.sender.lower() == u"#appledash") | (self.sender.lower() == u"#gyrotech"):
+            where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in self.bot.channels])
+        else:
+            self.bot.say(self.sender)
+            where_buffer = "buffer.buffername='%s'" % self.sender
         name_fixed = "%s!%%" % self.name
 
         q = ("SELECT backlog.type, backlog.flags, sender.sender, EXTRACT(EPOCH FROM backlog.time), backlog.message FROM "
@@ -164,7 +171,7 @@ def do_icquote(bot, trigger):
         bot.say("%d quote searches are already running!" % max_threads)
         return
 
-    t = QuoteSearchThread(arg, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot)
+    t = QuoteSearchThread(arg, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot, trigger.sender)
     t.start()
 
     with lock:
