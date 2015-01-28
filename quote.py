@@ -86,13 +86,13 @@ lock = threading.Lock()
 max_threads = 5
 
 class QuoteSearchThread(threading.Thread):
-    def __init__(self, name, reply_func, bot, sender):
+    def __init__(self, name, search_chans, reply_func, bot):
         threading.Thread.__init__(self)
         self.name = name
+        self.search_chans = search_chans
         self.reply_func = reply_func
         self.bot = bot
         self.start_time = time.time()
-        self.sender = sender
         
     def _run(self):
         actions = []
@@ -100,13 +100,7 @@ class QuoteSearchThread(threading.Thread):
         con = psycopg2.connect("dbname='quassel' user='%s' password='%s' host='localhost' port=5433" % (self.bot.config.quotes.sql_user, self.bot.config.quotes.sql_pass))
         cur = con.cursor()
 
-        if self.sender.lower()[0:5] == "#vore":
-            where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5"]])
-        elif (self.sender.lower() == u"#appledash") | (self.sender.lower() == u"#gyrotech"):
-            where_buffer = " OR ".join(["buffer.buffername='%s'" % x for x in self.bot.channels])
-        else:
-            self.bot.say(self.sender)
-            where_buffer = "buffer.buffername='%s'" % self.sender
+        where_buffer = " OR ".join(["buffer.buffername ILIKE '%s'" % x for x in self.search_chans])
         name_fixed = "%s!%%" % self.name
 
         q = ("SELECT backlog.type, backlog.flags, sender.sender, EXTRACT(EPOCH FROM backlog.time), backlog.message FROM "
@@ -127,17 +121,25 @@ class QuoteSearchThread(threading.Thread):
 
             actions.append((row[-1], row[3]))
 
+
         if not actions:
             self.reply_func("It seems that %s has never performed any actions!" % self.name)
             return
 
         choice = None
+        tries = 0
 
         while not choice:
+            if tries > 50:  # Generally, if we have to try this many times, there's no quote.
+                self.reply_func("Tried too many times to find a quote for '%s', giving up!" % self.name)
+                return
+
             a = random.choice(actions)
             m = re.search('"([^"]+)"', a[0])
             if m:
                 choice = (m.group(1), a[1])
+
+            tries += 1
 
         diff = (datetime.datetime.now() - datetime.datetime.fromtimestamp(choice[1])).total_seconds()
         self.reply_func("\"%s\" --%s, %s ago." % (choice[0], real_nick, format_diff(diff)))
@@ -171,7 +173,15 @@ def do_icquote(bot, trigger):
         bot.say("%d quote searches are already running!" % max_threads)
         return
 
-    t = QuoteSearchThread(arg, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot, trigger.sender)
+    chans = ["#vore", "#vore2", "#vore3", "#vore4", "#vore5", "#vore-ooc"]  # TODO: Should probably make this config-based.
+    all_chans = ["#appledash", "#gyrotech"]  # This too.
+    if trigger.sender.lower() not in chans:
+        if trigger.sender.lower() in all_chans:
+            chans = bot.channels
+        else:
+            chans = [trigger.sender]
+
+    t = QuoteSearchThread(arg, chans, lambda msg: bot.write(("PRIVMSG", trigger.sender), msg), bot)
     t.start()
 
     with lock:
