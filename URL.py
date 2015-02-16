@@ -109,6 +109,7 @@ def title_command(bot, trigger):
     Show the title or URL information for the given URL, or the last URL seen
     in this channel.
     """
+
     if not perm_chk(trigger.hostmask, "Bc", bot):
         return
     if not trigger.group(2):
@@ -128,6 +129,30 @@ def title_command(bot, trigger):
     for title, domain in results[:4]:
         bot.reply('[ %s ] - %s' % (title, domain))
 
+@rule('.*>>[0-9]{1,7}( |$).*')
+def derpylinks(bot, trigger):
+    ignoredchannels = []
+
+    if re.match(bot.config.core.prefix + 'title', trigger) or \
+            not perm_chk(trigger.hostmask, "Iu", bot) or \
+            trigger.sender in ignoredchannels:
+        return
+    trigger.raw = "Passed " + re.sub("(>>)([0-9]{1,7}( |$))","http://derpiboo.ru/\\2",trigger)
+    bot.say(", ".join(re.findall(url_finder, trigger.raw)))
+    title_auto(bot, trigger)
+
+
+@rule('.*https://ronxgr5zb4dkwdpt.onion/.*')
+def onionlink(bot, trigger):
+    ignoredchannels = []
+
+    if re.match(bot.config.core.prefix + 'title', trigger) or \
+            not perm_chk(trigger.hostmask, "Iu", bot) or \
+            trigger.sender in ignoredchannels:
+        return
+    trigger.raw = "Passed " + re.sub("(https://ronxgr5zb4dkwdpt.onion/)([0-9]{1,7}( |$))","http://derpiboo.ru/\\2",trigger)
+    bot.say(", ".join(re.findall(url_finder, trigger.raw)))
+    title_auto(bot, trigger)
 
 @rule('(?u).*(https?://\S+).*')
 def title_auto(bot, trigger):
@@ -136,20 +161,28 @@ def title_auto(bot, trigger):
     where the URL redirects to and show the title for that (or call a function
     from another module to give more information).
     """
+
+    ignoredchannels = ['#SRQsRoom','#techponiesafterdark']
+
+    try:
+        trigger.raw
+    except:
+        trigger.raw = trigger
+
     if re.match(bot.config.core.prefix + 'title', trigger) or \
             not perm_chk(trigger.hostmask, "Iu", bot) or \
-            trigger.sender=="#TechPoniesAfterDark":
+            trigger.sender in ignoredchannels:
         return
 
     # Avoid fetching known malicious links
-    if 'safety_cache' in bot.memory and trigger in bot.memory['safety_cache']:
+    if 'safety_cache' in bot.memory and trigger.raw in bot.memory['safety_cache']:
         if bot.memory['safety_cache'][trigger]['positives'] > 1:
             return
 
-    urls = re.findall(url_finder, trigger)
+    urls = re.findall(url_finder, trigger.raw)
     if urls:
         try:
-            results = process_urls(bot, trigger, urls)
+            results = process_urls(bot, trigger.raw, urls)
         except timeout:
             return  # The url timed out, so lets be quiet.
         bot.memory['last_seen_url'][trigger.sender] = urls[-1]
@@ -164,7 +197,7 @@ def title_auto(bot, trigger):
             return
         # Guard against responding to other instances of this bot.
         if message != trigger:
-            message = re.sub("tecknojock[^\s]*", "", message, 0, re.I)
+            message = re.sub(" - TecknoJock's library", "", message, 0, re.I)
             bot.say(message)
 
 

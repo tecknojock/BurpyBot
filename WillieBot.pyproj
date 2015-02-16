@@ -32,6 +32,7 @@
     <Compile Include="rand.py" />
     <Compile Include="reload2.py" />
     <Compile Include="seen.py" />
+    <Compile Include="QuoteDB.py" />
     <Compile Include="tags.py" />
     <Compile Include="tell2.py" />
     <Compile Include="test.py" />

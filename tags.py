@@ -6,7 +6,7 @@ Licensed under the Eiffel Forum License 2.
 """
 
 from willie.tools import Nick
-from willie.module import commands, example, priority, rule
+from willie.module import commands, example, priority, rule, thread
 import re
 
 try:
@@ -246,6 +246,9 @@ def linktag(willie,trigger):
             Db.commit()
             willie.say("The tags have been linked.")
     Db.close()
+
+@priority('low')
+@thread(True)
 @commands('alltags')
 def alltags(willie, trigger):
     '''Lists all tags in database.'''
@@ -266,12 +269,13 @@ def alltags(willie, trigger):
             Willi.say("No tags have been added.")
 
 @priority('low')
+@thread(True)
 @commands('alltagged')
-def alltags(willie, trigger):
-    '''Lists all tags in database.'''
+def alltagged(willie, trigger):
+    '''Lists all things that tags are tagged with in database.'''
     Db = willie.db.connect()
     cur = Db.cursor()
-    cur.execute('SELECT DISTINCT tag Target FROM tag_table')
+    cur.execute('SELECT DISTINCT tag FROM tag_table')
     listoftags = cur.fetchall()
     Db.close()
     if not trigger.sender[1:] == "gorgerbot":
