@@ -229,6 +229,10 @@ def night(willie, trigger):
         Db.commit()    
         Db.close()
         if (random.randint(1,100) < 75/count):
+            if trigger.sender in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5", "#vore6", "#vore-ooc", "#vore-con", "#vore-drama"]:
+                sender = "#vore"
+            else:
+                sender = trigger.sender
             randd = random.randint(1,2)
             if randd < 2 and count > 1 and not re.match(u"\A\(", trigger.bytes):
                 willie.action(random.choice([
@@ -239,7 +243,7 @@ def night(willie, trigger):
                                 ]))
             elif randd < 2 and not re.match(u"\A\(", trigger.bytes):
                 willie.action(random.choice([
-                                unicode.format(u"marks '{0} says they're going to bed, but doesn't actually go to bed' on their #vore bingo board.", trigger.nick),
+                                unicode.format(u"marks '{0} says they're going to bed, but doesn't actually go to bed' on their {1} bingo board.", trigger.nick, sender),
                                 unicode.format(u"predicts that {0} will be back soon.", trigger.nick),
                                 ]))
             elif not re.match(u"\A\(", trigger.bytes):
