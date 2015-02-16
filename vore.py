@@ -12,20 +12,19 @@ from willie.tools import Nick
 
 from willie.module import commands, example, priority, rule, rate
 
-
-def hacky_import(mod):
-    ffp = None
+try:
+    import imp
+    import sys
+    from permissions import perm_chk
+except:
     try:
-        ffp, pathname, description = imp.find_module(mod, [os.path.expanduser("~/.willie/modules/")])
-        loaded = imp.load_source(mod, pathname, ffp)
-        sys.modules[mod] = loaded
+        ffp, pathname, description = imp.find_module('permissions',['/home/dropbox/Dropbox/WillieBot'])
+        permissions = imp.load_source('permissions', pathname, ffp)
+        sys.modules['permissions'] = permissions
     finally:
         if ffp:
             ffp.close()
-    
-    return __import__(mod)
-
-perm_chk = hacky_import(permissions).perm_chk
+        from permissions import perm_chk
 
 
 basic_lick = (u"(?i)((lick(ed|s|ing)?)|(lapp?(ed|ing|s)?)|(taste?(s|d|ing)?)|(slurp(s|ed|ing)))")

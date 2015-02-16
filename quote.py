@@ -40,8 +40,6 @@ def hacky_import(mod):
     
     return __import__(mod)
 
-perm_chk = hacky_import(permissions).perm_chk
-
 # This is seriously horrible but it's the best way I could think of.
 def format_diff(seconds):
     minutes, seconds = divmod(seconds, 60)
@@ -159,8 +157,6 @@ class QuoteSearchThread(threading.Thread):
 @commands("icquote")
 @rate(1)
 def do_icquote(bot, trigger):
-    if not perm_chk(trigger.hostmask, "Bc", willie):
-        return
     arg = trigger.group(2)
     if not arg or not len(arg.strip()):
         bot.say("You must provide a user to find a quote for!")
