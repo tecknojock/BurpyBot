@@ -40,10 +40,15 @@ def rollany1(willie, trigger):
     message = trigger.partition(" ")
     roll = re.match("[0-9]+d[0-9]+([hl][0-9]+)?([+*-][0-9])*", message[0]).group(0)
     advantagetype = re.findall(r"[hl]",roll)
-    rolled = re.split(r"[dhl]", roll)
+    rollwithmath = re.split(r"([+*-])",roll,1)
+    rolled = re.split(r"[dhl]", rollwithmath[0])
     rnumb = rolled[0]
     die = rolled[1]
     advantage = 0
+    try:
+        mathstuff = rollwithmath[1]+rollwithmath[2]
+    except:
+        mathstuff = "*1"
     try:
         if advantagetype[0] == "h":
             advantage = int(rolled[2])
@@ -72,6 +77,7 @@ def rollany1(willie, trigger):
             int(numbers)
         except:
             numbers = numbers[0]
+        adjnumbers = eval(str(numbers)+mathstuff)
         try:
             nick = trigger.nick.lower()
             Db = willie.db.connect()
@@ -87,21 +93,21 @@ def rollany1(willie, trigger):
             Db.close()
         try:
             limit = eval(re.search(u"[0-9]+\s?[+-]?\s?[0-9]*", message[2].encode()).group(0))
-            if int(numbers) > limit and int(numbers) != int(die):
-                willie.say(unicode.format(u"\u00034Failure ({2}) [{0}] : {1}\u0003", numbers, message[2].encode(), roll.encode()))
-            elif int(numbers) == int(die) or (int(die) == 100 and int(numbers) >= 94+math.floor(lck/2)):
-                willie.say(unicode.format(u"\u000313Critical Failure ({2}) [{0}] : {1}\u0003", numbers, message[2].encode(), roll.encode()))
-            elif int(numbers) == 1 or (int(die) == 100 and int(numbers) <= lck):
-                willie.say(unicode.format(u"\u000310Critical Success ({2}) [{0}] : {1}\u0003", numbers, message[2].encode(), roll.encode()))
+            if int(adjnumbers) > limit and int(adjnumbers) != int(die):
+                willie.say(unicode.format(u"\u00039Sucess ({2}) [{0} ({3})] : {1}\u0003", numbers, message[2].encode(), roll.encode(), adjnumbers))
+            elif int(adjnumbers) == int(die) or (int(die) == 100 and int(adjnumbers) >= 94+math.floor(lck/2)):
+                willie.say(unicode.format(u"\u000310Critical Success ({2}) [{0} ({3})] : {1}\u0003", numbers, message[2].encode(), roll.encode(), adjnumbers))
+            elif int(adjnumbers) == 1 or (int(die) == 100 and int(adjnumbers) <= lck):
+                willie.say(unicode.format(u"\u000313Critical Failure ({2}) [{0} ({3})] : {1}\u0003", numbers, message[2].encode(), roll.encode(), adjnumbers))
             else:
-                willie.say(unicode.format(u"\u00039Sucess ({2}) [{0}] : {1}\u0003", numbers, message[2].encode(), roll.encode()))
+                willie.say(unicode.format(u"\u00034Failure ({2}) [{0}({3})] : {1}\u0003", numbers, message[2].encode(), roll.encode(), adjnumbers))
         except:
-            if  int(numbers) == int(die) or (int(die) == 100 and int(numbers) >= 94+math.floor(lck/2)):
-                willie.say(unicode.format(u"\u000313Critical Failure ({2}) [{0}] : {1}\u0003", numbers, message[2].encode(), roll.encode()))
-            elif int(numbers) == 1 or (int(die) == 100 and int(numbers) <= lck):
-                willie.say(unicode.format(u"\u000310Critical Success ({2}) [{0}] : {1}\u0003", numbers, message[2].encode(), roll.encode()))
+            if  int(adjnumbers) == int(die) or (int(die) == 100 and int(adjnumbers) >= 94+math.floor(lck/2)):
+                willie.say(unicode.format(u"\u000310Critical Success ({2}) [{0} ({3})] : {1}\u0003", numbers, message[2].encode(), roll.encode(), adjnumbers))
+            elif int(adjnumbers) == 1 or (int(die) == 100 and int(adjnumbers) <= lck):
+                willie.say(unicode.format(u"\u000313Critical Failure ({2}) [{0} ({3})] : {1}\u0003", numbers, message[2].encode(), roll.encode(), adjnumbers))
             else:
-                willie.say(unicode.format(u"({2}) [{0}] : {1}", numbers, message[2].encode(), roll.encode()))
+                willie.say(unicode.format(u"({2}) [{0}({3})] : {1}", numbers, message[2].encode(), roll.encode(), adjnumbers))
     else:
         willie.say(unicode.format(u"({2}) {0} : {1}", ", ".join(str(x) for x in numbers), message[2].encode(), roll.encode()))
 
