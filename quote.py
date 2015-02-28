@@ -105,7 +105,7 @@ class QuoteSearchThread(threading.Thread):
 
         q = ("SELECT backlog.type, backlog.flags, sender.sender, EXTRACT(EPOCH FROM backlog.time), backlog.message FROM "
                 "public.backlog, public.sender, public.buffer, public.network, public.quasseluser WHERE "
-                "username='TecknoJock' AND backlog.senderid = sender.senderid AND networkname='Canternet After Dark' AND "
+                "username='TecknoJock' AND backlog.senderid = sender.senderid AND (networkname='Canternet After Dark' OR networkname='PonyChat') AND "
                 "backlog.bufferid = buffer.bufferid AND (%s) AND buffer.networkid = network.networkid AND buffer.userid = quasseluser.userid AND "
                 "type=4 AND (sender ILIKE %%s OR sender ILIKE %%s) ORDER BY backlog.messageid ASC"
             ) % where_buffer
