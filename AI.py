@@ -128,8 +128,8 @@ def slapped(willie, trigger):
 
 
 hi_prefix = ur"($nickname[:,]?\s+)"
-hi_meat = ur"(hello|hi|ahoy|sup|hey|yo|((good|g)?'?\s?((afternoon)|(morn(ing)?)|(eve(ning)?))))"
-hi_all = ur"(y?'?all|(every\s?(body|one|pon[tiye]))|#vore|(vore)?\s?poni?e?t?s|chattybox|" + \
+hi_meat = ur"(\A|\s)(hello|hi|ahoy|sup|hey|yo|((good|g)?'?\s?((afternoon)|(morn(ing)?)|(eve(ning)?))))"
+hi_all = ur"(y?'?all|(every\s?(body|one|pon[tiye]))|#vore|(vore)?\s?poni?e?t?s|chattybox|((Small|little|tin(i|y)) )?hors(y|i?e)s|" + \
     ur"folks|guys|peoples?|$nickname)"
 hi_to_fineline = hi_prefix + hi_meat + u'(\W?$)'
 hi_to_all = hi_meat + ur"[,]?\s+" + hi_all + u'(\W?$)'
@@ -182,9 +182,8 @@ def isbot(willie, trigger):
 
 
 night_prefix = ur"($nickname\:?,?\s+)"
-night_meat = ur"((good|g)?\s?'?(n'?i'?g'?h'?t|bye)|(later(s?))|nini)"
-night_all = ur"(y?'?all|(every\s?(body|one|pon[yei]))|#vore|" + \
-    u"folks|guys|peoples?|poni?es|$nickname)"
+night_meat = ur"(\A|\s)((good|g)?\s?'?(n'?i'?g'?h'?t|bye)|(later(s?))|nini),?"
+night_all = hi_all
 night_to_fineline = night_prefix + night_meat
 night_to_all = ur".*?" + night_meat + ur",?\s+" + night_all
 night_universal = ur".*?((time (for me)?\s?(to|for)\s?((go to)|(head))?\s?" + \
@@ -228,7 +227,7 @@ def night(willie, trigger):
                 cur.execute('update nini_table set count=?, Timestamp=? where user=?;', params)
         Db.commit()    
         Db.close()
-        if (random.randint(1,100) < 75/count):
+        if (random.randint(1,100) < 80/(count)**.5):
             if trigger.sender in ["#vore", "#vore2", "#vore3", "#vore4", "#vore5", "#vore6", "#vore-ooc", "#vore-con", "#vore-drama"]:
                 sender = "#vore"
             else:

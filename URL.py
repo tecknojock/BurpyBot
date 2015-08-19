@@ -137,7 +137,7 @@ def derpylinks(bot, trigger):
             not perm_chk(trigger.hostmask, "Iu", bot) or \
             trigger.sender in ignoredchannels:
         return
-    trigger.raw = "Passed " + re.sub("(>>)([0-9]{1,7}( |$))","http://derpiboo.ru/\\2",trigger)
+    trigger.raw = "Passed " + re.sub("(>>)([0-9]{1,7}( |$))","https://derpiboo.ru/\\2",trigger)
     bot.say(", ".join(re.findall(url_finder, trigger.raw)))
     title_auto(bot, trigger)
 
@@ -150,7 +150,7 @@ def onionlink(bot, trigger):
             not perm_chk(trigger.hostmask, "Iu", bot) or \
             trigger.sender in ignoredchannels:
         return
-    trigger.raw = "Passed " + re.sub("(https://ronxgr5zb4dkwdpt.onion/)([0-9]{1,7}( |$))","http://derpiboo.ru/\\2",trigger)
+    trigger.raw = "Passed " + re.sub("(https://ronxgr5zb4dkwdpt.onion/)([0-9]{1,7}( |$))","https://derpiboo.ru/\\2",trigger)
     bot.say(", ".join(re.findall(url_finder, trigger.raw)))
     title_auto(bot, trigger)
 

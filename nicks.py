@@ -35,9 +35,11 @@ re_hostname = re.compile(r':\S+\s311\s\S+\s(\S+)\s\S+\s(\S+)\s\*')
 
 class UserID(Nick):
     
-    def __new__(cls, ident, nick=None):
+    def __new__(cls, ident, host=None, nick=None, channels=None):
         s = Nick.__new__(cls, ident)
-        s.nicks = [nick]
+        s.nick = nick
+        s.channels = [channels]
+        s.hostname = host
         return s
         
     def __eq__(self, other):
@@ -51,10 +53,9 @@ class UserID(Nick):
 class NickPlus(Nick):
     _hostname = None
 
-    def __new__(cls, nick, host=None, ident=None):
+    def __new__(cls, nick, ident=None):
         s = Nick.__new__(cls, nick)
         s.ident = ident
-        s.hostname = host
         return s
 
     @property
@@ -81,7 +82,7 @@ class NickPlus(Nick):
 
 def setup(willie):
     willie.memory['chan_nicks'] = {}
-    willie.memory['chan_ids'] = {}
+    willie.memory['ids'] = {}
     Db = willie.db.connect()
     cur = Db.cursor()
     
@@ -114,8 +115,8 @@ def whois_catcher(willie, trigger):
     n, h = re_hostname.search(willie.raw).groups()
     n = n.lstrip('+%@&~')
     ident = getident(n, h,willie)
-    who = NickPlus(n, h, ident)
-    user = UserID(ident, who)
+    user = UserID(ident,h,n)
+    who = NickPlus(n, ident)
     #willie.debug(__file__, log.format(u'WHOIS %s: %s' % (who, h)), u'verbose')
     with willie.memory['nick_lock']:
         for chan in willie.memory['chan_nicks']:
@@ -127,7 +128,7 @@ def whois_catcher(willie, trigger):
             willie.memory['chan_nicks'][chan] = \
                 [who if i.lower() == who.lower() and i.hostname is None else i for i in willie.memory['chan_nicks'][chan]]
             if who in willie.memory['chan_nicks'][chan]:
-                if who.hostname == willie.memory['chan_nicks'][chan][willie.memory['chan_nicks'][chan].index(who)].hostname:
+                if who.ident.hostname == willie.memory['chan_nicks'][chan][willie.memory['chan_nicks'][chan].index(who)].ident.hostname:
                     if user in willie.memory['chan_ids'][chan]:
                         willie.memory['chan_ids'][chan][willie.memory['chan_ids'][chan].index(user)].nicks.extend(user.nicks)
                     else:
@@ -371,13 +372,20 @@ def getident(nick, host, willie):
     nickuserid = cur.fetchone()
     cur.execute('SELECT timestamp FROM nickstrack_table WHERE upper(nick)=?;', params)
     nicktimestamp = cur.fetchone()
+    existshost = False
+    existsnick = False
+    for chan in willie.memory['chan_ids']:
+        if hostuserid[0] in willie.memory['chan_ids'][chan]:
+            existshost = True
+        if nickuserid[0] in willie.memory['chan_ids'][chan]:
+            existsnick = True
     if not nickuserid and not hostuserid:
         params = (host, nick, time.time(),)
         cur.execute('Insert Into hostmasktrack_table values (?,?,?);', params)
         params = (nick, nick, time.time(),)
         cur.execute('Insert Into nickstrack_table values (?,?,?);', params)
         ident = nick
-    elif not nickuserid and hostuserid is not None:
+    elif not nickuserid and hostuserid is not None and not existshost:
         ident = hostuserid[0]
         params = (time.time(), host.upper(),)
         cur.execute('update hostmasktrack_table set timestamp=? where upper(hostmask)=?', params)
@@ -397,13 +405,6 @@ def getident(nick, host, willie):
         ident = nickuserid[0]
     else:
         #willie.msg('#gyrotech', "nickuserid[0]" + "hostuserid[0]")
-        existshost = False
-        existsnick = False
-        for chan in willie.memory['chan_ids']:
-            if hostuserid[0] in willie.memory['chan_ids'][chan]:
-                existshost = True
-            if nickuserid[0] in willie.memory['chan_ids'][chan]:
-                existsnick = True
         if not existshost:
             ident = hostuserid[0]
             if time.time > nicktimestamp[0] + sunset:
@@ -418,6 +419,19 @@ def getident(nick, host, willie):
     Db.commit()
     Db.close()
     return ident
+
+def getidentityfromnick(nick,trigger):
+    if nick in willie.memory['chan_nicks'][trigger.sender]:
+        return willie.memory['chan_nicks']['#gyrotech'][willie.memory['chan_nicks']['#gyrotech'].index(nick)].ident
+    else:
+        Db = willie.db.connect()
+        cur = Db.cursor()
+        params = (nick.upper(),)
+        cur.execute('SELECT userid,timestamp FROM nickstrack_table WHERE upper(nick)=?;', params)
+        nickuserid = cur.fetchone()
+        cur.execute('SELECT timestamp FROM nickstrack_table WHERE upper(nick)=?;', params)
+
+
 
 if __name__ == "__main__":
     print __doc__.strip()
